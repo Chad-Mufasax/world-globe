@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>World Globe</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000010;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    canvas { display: block; }
+    #hint {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.45);
+      font-size: 13px;
+      letter-spacing: 1px;
+      pointer-events: none;
+      user-select: none;
+    }
+    #title {
+      position: fixed;
+      top: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.75);
+      font-size: 22px;
+      font-weight: 300;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      pointer-events: none;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="title">Earth</div>
+  <div id="hint">Drag to rotate &nbsp;·&nbsp; Scroll to zoom</div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // Scene
+    const scene = new THREE.Scene();
+
+    // Camera
+    const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
+    camera.position.z = 2.8;
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(devicePixelRatio);
+    renderer.setSize(innerWidth, innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Stars background
+    const starGeo = new THREE.BufferGeometry();
+    const starCount = 8000;
+    const starPos = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount * 3; i++) {
+      starPos[i] = (Math.random() - 0.5) * 200;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.12 });
+    scene.add(new THREE.Points(starGeo, starMat));
+
+    // Lighting
+    const ambient = new THREE.AmbientLight(0x333355, 1.2);
+    scene.add(ambient);
+    const sun = new THREE.DirectionalLight(0xfff5e0, 3.5);
+    sun.position.set(5, 3, 5);
+    scene.add(sun);
+
+    // Texture loader
+    const loader = new THREE.TextureLoader();
+
+    // Earth sphere
+    const earthGeo = new THREE.SphereGeometry(1, 64, 64);
+
+    // Use a reliable earth texture from a CDN
+    const earthTex = loader.load(
+      'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r164/examples/textures/planets/earth_atmos_2048.jpg'
+    );
+    const earthSpec = loader.load(
+      'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r164/examples/textures/planets/earth_specular_2048.jpg'
+    );
+    const earthNorm = loader.load(
+      'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r164/examples/textures/planets/earth_normal_2048.jpg'
+    );
+
+    const earthMat = new THREE.MeshPhongMaterial({
+      map: earthTex,
+      specularMap: earthSpec,
+      normalMap: earthNorm,
+      normalScale: new THREE.Vector2(0.85, 0.85),
+      specular: new THREE.Color(0x2244aa),
+      shininess: 25,
+    });
+
+    const earth = new THREE.Mesh(earthGeo, earthMat);
+    scene.add(earth);
+
+    // Clouds layer
+    const cloudGeo = new THREE.SphereGeometry(1.008, 64, 64);
+    const cloudTex = loader.load(
+      'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r164/examples/textures/planets/earth_clouds_1024.png'
+    );
+    const cloudMat = new THREE.MeshPhongMaterial({
+      map: cloudTex,
+      transparent: true,
+      opacity: 0.5,
+      depthWrite: false,
+    });
+    const clouds = new THREE.Mesh(cloudGeo, cloudMat);
+    scene.add(clouds);
+
+    // Atmosphere glow
+    const atmGeo = new THREE.SphereGeometry(1.06, 64, 64);
+    const atmMat = new THREE.MeshPhongMaterial({
+      color: 0x2266ff,
+      transparent: true,
+      opacity: 0.07,
+      side: THREE.FrontSide,
+      depthWrite: false,
+    });
+    scene.add(new THREE.Mesh(atmGeo, atmMat));
+
+    // Orbit controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 1.5;
+    controls.maxDistance = 6;
+    controls.autoRotate = false;
+    controls.rotateSpeed = 0.5;
+
+    // Resize
+    window.addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+
+    // Animate
+    function animate() {
+      requestAnimationFrame(animate);
+      earth.rotation.y += 0.0008;
+      clouds.rotation.y += 0.0010;
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
