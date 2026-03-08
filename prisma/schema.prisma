@@ -28,8 +28,8 @@ model Photo {
   folderName String
   createdAt  DateTime @default(now())
   userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   likes      Like[]
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Like {
