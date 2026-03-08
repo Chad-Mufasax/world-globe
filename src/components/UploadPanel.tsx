@@ -50,18 +50,40 @@ export default function UploadPanel({ onUploadSuccess }: Props) {
     }
   }
 
+  async function compressToBase64(f: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const url = URL.createObjectURL(f)
+      img.onload = () => {
+        const MAX = 900
+        let { width, height } = img
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round(height * MAX / width); width = MAX }
+          else { width = Math.round(width * MAX / height); height = MAX }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width; canvas.height = height
+        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+        URL.revokeObjectURL(url)
+        resolve(canvas.toDataURL('image/jpeg', 0.75))
+      }
+      img.onerror = reject
+      img.src = url
+    })
+  }
+
   async function handleUpload() {
     if (!file || !gps || !folderName) return
+    setStatus({ msg: 'Compressing…', type: 'loading' })
+
+    const imageData = await compressToBase64(file)
     setStatus({ msg: 'Uploading\u2026', type: 'loading' })
 
-    const fd = new FormData()
-    fd.append('file', file)
-    fd.append('lat', String(gps.lat))
-    fd.append('lng', String(gps.lng))
-    fd.append('folderName', folderName)
-    fd.append('caption', caption)
-
-    const res = await fetch('/api/photos', { method: 'POST', body: fd })
+    const res = await fetch('/api/photos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageData, lat: gps.lat, lng: gps.lng, folderName, caption }),
+    })
     if (!res.ok) {
       const d = await res.json()
       setStatus({ msg: d.error || 'Upload failed', type: 'err' })
