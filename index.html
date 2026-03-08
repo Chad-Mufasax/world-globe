@@ -6,165 +6,495 @@
   <title>World Globe</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
       background: #000010;
       overflow: hidden;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #fff;
     }
+
     canvas { display: block; }
+
+    /* ── Left Panel ───────────────────────────── */
+    #panel {
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      width: 260px;
+      background: rgba(10, 14, 30, 0.82);
+      backdrop-filter: blur(14px);
+      border-right: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      gap: 18px;
+      z-index: 10;
+    }
+
+    #panel h1 {
+      font-size: 17px;
+      font-weight: 400;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.8);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 14px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 6px;
+    }
+
+    /* Upload zone */
+    #upload-zone {
+      border: 1.5px dashed rgba(100,140,255,0.4);
+      border-radius: 10px;
+      padding: 20px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.6;
+    }
+    #upload-zone:hover {
+      border-color: rgba(100,140,255,0.8);
+      background: rgba(100,140,255,0.06);
+    }
+    #upload-zone .icon { font-size: 28px; display: block; margin-bottom: 6px; }
+    #file-input { display: none; }
+
+    /* Name input */
+    #name-input {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    #name-input:focus { border-color: rgba(100,140,255,0.6); }
+    #name-input::placeholder { color: rgba(255,255,255,0.3); }
+
+    /* Status */
+    #status {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      min-height: 18px;
+      line-height: 1.5;
+    }
+    #status.ok  { color: #4ade80; }
+    #status.err { color: #f87171; }
+
+    /* Markers list */
+    #markers-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    #markers-list::-webkit-scrollbar { width: 4px; }
+    #markers-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+    .marker-item {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      padding: 9px 11px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .marker-item:hover {
+      background: rgba(100,140,255,0.12);
+      border-color: rgba(100,140,255,0.3);
+    }
+    .marker-item .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #6495ff;
+      flex-shrink: 0;
+    }
+    .marker-item .coords {
+      font-size: 10px;
+      color: rgba(255,255,255,0.3);
+      margin-top: 2px;
+    }
+
+    /* ── CSS2D labels ─────────────────────────── */
+    #label-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .place-label {
+      background: rgba(10,14,30,0.8);
+      border: 1px solid rgba(100,140,255,0.4);
+      border-radius: 6px;
+      padding: 4px 9px;
+      font-size: 11px;
+      color: #fff;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: translate(-50%, -140%);
+      backdrop-filter: blur(6px);
+    }
+
+    /* ── Popup card ───────────────────────────── */
+    #popup {
+      position: fixed;
+      top: 50%; right: 30px;
+      transform: translateY(-50%);
+      background: rgba(10,14,30,0.92);
+      border: 1px solid rgba(100,140,255,0.3);
+      border-radius: 14px;
+      padding: 16px;
+      width: 220px;
+      z-index: 20;
+      display: none;
+      backdrop-filter: blur(16px);
+    }
+    #popup img {
+      width: 100%;
+      border-radius: 8px;
+      object-fit: cover;
+      max-height: 160px;
+    }
+    #popup .pop-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 10px 0 4px;
+    }
+    #popup .pop-coords {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+    }
+    #popup-close {
+      position: absolute;
+      top: 10px; right: 12px;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.5);
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
     #hint {
       position: fixed;
-      bottom: 24px;
+      bottom: 18px;
       left: 50%;
       transform: translateX(-50%);
-      color: rgba(255,255,255,0.45);
-      font-size: 13px;
+      color: rgba(255,255,255,0.25);
+      font-size: 11px;
       letter-spacing: 1px;
       pointer-events: none;
-      user-select: none;
-    }
-    #title {
-      position: fixed;
-      top: 28px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: rgba(255,255,255,0.75);
-      font-size: 22px;
-      font-weight: 300;
-      letter-spacing: 6px;
-      text-transform: uppercase;
-      pointer-events: none;
-      user-select: none;
     }
   </style>
 </head>
 <body>
-  <div id="title">Earth</div>
-  <div id="hint">Drag to rotate &nbsp;·&nbsp; Scroll to zoom</div>
 
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
-    }
+<!-- Left panel -->
+<div id="panel">
+  <h1>&#127760; Globe</h1>
+
+  <div>
+    <div class="section-label">Add a place</div>
+    <div id="upload-zone">
+      <span class="icon">&#128247;</span>
+      Drop a photo here<br/>or click to browse
+    </div>
+    <input type="file" id="file-input" accept="image/*" />
+  </div>
+
+  <div>
+    <div class="section-label">Folder name</div>
+    <input id="name-input" type="text" placeholder="Name this place…" maxlength="40" />
+  </div>
+
+  <div id="status">Upload a photo with GPS data to begin.</div>
+
+  <div>
+    <div class="section-label">Places</div>
+    <div id="markers-list"></div>
+  </div>
+</div>
+
+<!-- Label container (CSS2D) -->
+<div id="label-container"></div>
+
+<!-- Popup -->
+<div id="popup">
+  <button id="popup-close">&#215;</button>
+  <img id="popup-img" src="" alt="photo" />
+  <div class="pop-name" id="popup-name"></div>
+  <div class="pop-coords" id="popup-coords"></div>
+</div>
+
+<div id="hint">Drag to rotate &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp; Click a marker to preview</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
   }
-  </script>
+}
+</script>
 
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
-    // Scene
-    const scene = new THREE.Scene();
+// ── Scene setup ────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 200);
+camera.position.z = 2.8;
 
-    // Camera
-    const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
-    camera.position.z = 2.8;
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(devicePixelRatio);
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(devicePixelRatio);
-    renderer.setSize(innerWidth, innerHeight);
-    document.body.appendChild(renderer.domElement);
+// CSS2D renderer for labels
+const labelRenderer = new CSS2DRenderer({ element: document.getElementById('label-container') });
+labelRenderer.setSize(innerWidth, innerHeight);
 
-    // Stars background
-    const starGeo = new THREE.BufferGeometry();
-    const starCount = 8000;
-    const starPos = new Float32Array(starCount * 3);
-    for (let i = 0; i < starCount * 3; i++) {
-      starPos[i] = (Math.random() - 0.5) * 200;
-    }
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-    const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.12 });
-    scene.add(new THREE.Points(starGeo, starMat));
+// Stars
+const starGeo = new THREE.BufferGeometry();
+const sp = new Float32Array(10000 * 3);
+for (let i = 0; i < sp.length; i++) sp[i] = (Math.random() - .5) * 200;
+starGeo.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 })));
 
-    // Lighting
-    const ambient = new THREE.AmbientLight(0x333355, 1.2);
-    scene.add(ambient);
-    const sun = new THREE.DirectionalLight(0xfff5e0, 3.5);
-    sun.position.set(5, 3, 5);
-    scene.add(sun);
+// Lighting
+scene.add(new THREE.AmbientLight(0x334466, 1.5));
+const sun = new THREE.DirectionalLight(0xfff5e0, 3.5);
+sun.position.set(5, 3, 5);
+scene.add(sun);
 
-    // Texture loader
-    const loader = new THREE.TextureLoader();
+// Earth
+const loader = new THREE.TextureLoader();
+const earthGeo = new THREE.SphereGeometry(1, 64, 64);
+const earthMat = new THREE.MeshPhongMaterial({
+  map:         loader.load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r164/examples/textures/planets/earth_atmos_2048.jpg'),
+  specularMap: loader.load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r164/examples/textures/planets/earth_specular_2048.jpg'),
+  normalMap:   loader.load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r164/examples/textures/planets/earth_normal_2048.jpg'),
+  normalScale: new THREE.Vector2(0.85, 0.85),
+  specular: new THREE.Color(0x2244aa),
+  shininess: 25,
+});
+const earth = new THREE.Mesh(earthGeo, earthMat);
+scene.add(earth);
 
-    // Earth sphere
-    const earthGeo = new THREE.SphereGeometry(1, 64, 64);
+// Clouds
+const cloudGeo = new THREE.SphereGeometry(1.008, 64, 64);
+const cloudMat = new THREE.MeshPhongMaterial({
+  map: loader.load('https://cdn.jsdelivr.net/gh/mrdoob/three.js@r164/examples/textures/planets/earth_clouds_1024.png'),
+  transparent: true, opacity: 0.45, depthWrite: false,
+});
+const clouds = new THREE.Mesh(cloudGeo, cloudMat);
+scene.add(clouds);
 
-    // Use a reliable earth texture from a CDN
-    const earthTex = loader.load(
-      'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r164/examples/textures/planets/earth_atmos_2048.jpg'
-    );
-    const earthSpec = loader.load(
-      'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r164/examples/textures/planets/earth_specular_2048.jpg'
-    );
-    const earthNorm = loader.load(
-      'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r164/examples/textures/planets/earth_normal_2048.jpg'
-    );
+// Atmosphere
+const atmMat = new THREE.MeshPhongMaterial({ color: 0x2266ff, transparent: true, opacity: 0.07, depthWrite: false });
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(1.06, 64, 64), atmMat));
 
-    const earthMat = new THREE.MeshPhongMaterial({
-      map: earthTex,
-      specularMap: earthSpec,
-      normalMap: earthNorm,
-      normalScale: new THREE.Vector2(0.85, 0.85),
-      specular: new THREE.Color(0x2244aa),
-      shininess: 25,
-    });
+// Controls
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 1.4;
+controls.maxDistance = 7;
 
-    const earth = new THREE.Mesh(earthGeo, earthMat);
-    scene.add(earth);
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  labelRenderer.setSize(innerWidth, innerHeight);
+});
 
-    // Clouds layer
-    const cloudGeo = new THREE.SphereGeometry(1.008, 64, 64);
-    const cloudTex = loader.load(
-      'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r164/examples/textures/planets/earth_clouds_1024.png'
-    );
-    const cloudMat = new THREE.MeshPhongMaterial({
-      map: cloudTex,
-      transparent: true,
-      opacity: 0.5,
-      depthWrite: false,
-    });
-    const clouds = new THREE.Mesh(cloudGeo, cloudMat);
-    scene.add(clouds);
+// ── Helpers ────────────────────────────────────────────────────────
+function latLngToVec3(lat, lng, r = 1) {
+  const phi   = (90 - lat) * (Math.PI / 180);
+  const theta = (lng + 180) * (Math.PI / 180);
+  return new THREE.Vector3(
+    -r * Math.sin(phi) * Math.cos(theta),
+     r * Math.cos(phi),
+     r * Math.sin(phi) * Math.sin(theta)
+  );
+}
 
-    // Atmosphere glow
-    const atmGeo = new THREE.SphereGeometry(1.06, 64, 64);
-    const atmMat = new THREE.MeshPhongMaterial({
-      color: 0x2266ff,
-      transparent: true,
-      opacity: 0.07,
-      side: THREE.FrontSide,
-      depthWrite: false,
-    });
-    scene.add(new THREE.Mesh(atmGeo, atmMat));
+// ── Markers state ──────────────────────────────────────────────────
+const places = [];  // { name, lat, lng, imgUrl, mesh, labelObj }
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const markerMeshes = [];
 
-    // Orbit controls
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.06;
-    controls.minDistance = 1.5;
-    controls.maxDistance = 6;
-    controls.autoRotate = false;
-    controls.rotateSpeed = 0.5;
+function addMarker({ name, lat, lng, imgUrl }) {
+  const pos = latLngToVec3(lat, lng, 1.015);
 
-    // Resize
-    window.addEventListener('resize', () => {
-      camera.aspect = innerWidth / innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(innerWidth, innerHeight);
-    });
+  // Pin mesh
+  const geo = new THREE.SphereGeometry(0.018, 16, 16);
+  const mat = new THREE.MeshPhongMaterial({ color: 0x6495ff, emissive: 0x2244cc, shininess: 80 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.copy(pos);
+  scene.add(mesh);
+  markerMeshes.push(mesh);
 
-    // Animate
-    function animate() {
-      requestAnimationFrame(animate);
-      earth.rotation.y += 0.0008;
-      clouds.rotation.y += 0.0010;
-      controls.update();
-      renderer.render(scene, camera);
-    }
-    animate();
-  </script>
+  // CSS2D label above pin
+  const div = document.createElement('div');
+  div.className = 'place-label';
+  div.textContent = name;
+  const labelObj = new CSS2DObject(div);
+  const labelPos = latLngToVec3(lat, lng, 1.08);
+  labelObj.position.copy(labelPos);
+  scene.add(labelObj);
+
+  const place = { name, lat, lng, imgUrl, mesh, labelObj };
+  places.push(place);
+
+  // Sidebar item
+  const item = document.createElement('div');
+  item.className = 'marker-item';
+  item.innerHTML = `
+    <span class="dot"></span>
+    <div>
+      <div>${name}</div>
+      <div class="coords">${lat.toFixed(4)}°, ${lng.toFixed(4)}°</div>
+    </div>`;
+  item.addEventListener('click', () => showPopup(place));
+  document.getElementById('markers-list').appendChild(item);
+
+  // Fly to
+  flyTo(lat, lng);
+}
+
+function flyTo(lat, lng) {
+  const target = latLngToVec3(lat, lng, 2.8);
+  // Animate camera toward that direction
+  const start = camera.position.clone();
+  const end = target.clone();
+  let t = 0;
+  const dur = 60;
+  function step() {
+    t++;
+    const k = Math.min(t / dur, 1);
+    const ease = k < .5 ? 2*k*k : -1+(4-2*k)*k;
+    camera.position.lerpVectors(start, end, ease * 0.5);
+    controls.update();
+    if (t < dur) requestAnimationFrame(step);
+  }
+  step();
+}
+
+// ── Popup ──────────────────────────────────────────────────────────
+function showPopup(place) {
+  document.getElementById('popup-img').src = place.imgUrl;
+  document.getElementById('popup-name').textContent = place.name;
+  document.getElementById('popup-coords').textContent =
+    `${place.lat.toFixed(5)}°N, ${place.lng.toFixed(5)}°E`;
+  document.getElementById('popup').style.display = 'block';
+}
+document.getElementById('popup-close').addEventListener('click', () => {
+  document.getElementById('popup').style.display = 'none';
+});
+
+// Click on marker
+renderer.domElement.addEventListener('click', e => {
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+  mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(markerMeshes);
+  if (hits.length) {
+    const idx = markerMeshes.indexOf(hits[0].object);
+    if (idx !== -1) showPopup(places[idx]);
+  }
+});
+
+// ── EXIF extraction (exifr via CDN) ───────────────────────────────
+let exifrReady = false;
+const exifrScript = document.createElement('script');
+exifrScript.src = 'https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.cjs';
+exifrScript.onload = () => { exifrReady = true; };
+document.head.appendChild(exifrScript);
+
+async function getGPS(file) {
+  if (!exifrReady) throw new Error('EXIF library not ready yet, try again.');
+  const gps = await window.exifr.gps(file);
+  if (!gps || gps.latitude == null || gps.longitude == null)
+    throw new Error('No GPS data found in this photo.');
+  return { lat: gps.latitude, lng: gps.longitude };
+}
+
+// ── Upload handling ────────────────────────────────────────────────
+const status    = document.getElementById('status');
+const nameInput = document.getElementById('name-input');
+const fileInput = document.getElementById('file-input');
+const zone      = document.getElementById('upload-zone');
+
+function setStatus(msg, type = '') {
+  status.textContent = msg;
+  status.className = type;
+}
+
+async function handleFile(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    setStatus('Please upload an image file.', 'err'); return;
+  }
+  setStatus('Reading EXIF data…');
+  try {
+    const { lat, lng } = await getGPS(file);
+    const name = nameInput.value.trim() || file.name.replace(/\.[^.]+$/, '');
+    const imgUrl = URL.createObjectURL(file);
+    addMarker({ name, lat, lng, imgUrl });
+    setStatus(`Placed "${name}" at ${lat.toFixed(3)}°, ${lng.toFixed(3)}°`, 'ok');
+    nameInput.value = '';
+  } catch (err) {
+    setStatus(err.message, 'err');
+  }
+}
+
+zone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'rgba(100,140,255,0.9)'; });
+zone.addEventListener('dragleave', () => { zone.style.borderColor = ''; });
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.style.borderColor = '';
+  handleFile(e.dataTransfer.files[0]);
+});
+
+// ── Render loop ────────────────────────────────────────────────────
+function animate() {
+  requestAnimationFrame(animate);
+  earth.rotation.y += 0.0008;
+  clouds.rotation.y += 0.001;
+  // Keep marker pins synced with earth rotation
+  controls.update();
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+}
+animate();
+</script>
 </body>
 </html>
