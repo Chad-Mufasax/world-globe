@@ -3,7 +3,13 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Globe, Lock, Mail, User } from 'lucide-react'
+import { Lock, Mail, User, Sparkles } from 'lucide-react'
+
+const fields = [
+  { icon: User,  placeholder: 'Username', key: 'username', type: 'text' },
+  { icon: Mail,  placeholder: 'Email',    key: 'email',    type: 'email' },
+  { icon: Lock,  placeholder: 'Password', key: 'password', type: 'password' },
+]
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -31,47 +37,56 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f] overflow-auto">
-      <div className="w-full max-w-md px-8">
+    <div className="min-h-screen flex items-center justify-center overflow-auto" style={{ background: '#07030f' }}>
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: '15%', right: '15%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.2), transparent 70%)', filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', bottom: '15%', left: '10%', width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(219,39,119,0.18), transparent 70%)', filter: 'blur(40px)' }} />
+      </div>
+
+      <div className="w-full max-w-md px-8 relative" style={{ zIndex: 10 }}>
         <div className="text-center mb-10">
-          <Globe className="w-12 h-12 mx-auto mb-4 text-blue-400" />
-          <h1 className="text-3xl font-light tracking-widest uppercase text-white">GlobeSnap</h1>
-          <p className="text-gray-500 mt-2 text-sm">Join the world map</p>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5"
+            style={{ background: 'linear-gradient(135deg, #db2777, #7c3aed)', boxShadow: '0 0 30px rgba(219,39,119,0.5)' }}>
+            <Sparkles className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-widest uppercase"
+            style={{ background: 'linear-gradient(90deg, #e879f9, #a78bfa, #38bdf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            GlobeSnap
+          </h1>
+          <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>Join the world map.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {[
-            { icon: User, placeholder: 'Username', key: 'username', type: 'text' },
-            { icon: Mail, placeholder: 'Email', key: 'email', type: 'email' },
-            { icon: Lock, placeholder: 'Password', key: 'password', type: 'password' },
-          ].map(({ icon: Icon, placeholder, key, type }) => (
+          {fields.map(({ icon: Icon, placeholder, key, type }) => (
             <div key={key} className="relative">
-              <Icon className="absolute left-3 top-3.5 w-4 h-4 text-gray-500" />
+              <Icon className="absolute left-3.5 top-3.5 w-4 h-4" style={{ color: 'rgba(167,139,250,0.6)' }} />
               <input
                 type={type}
                 placeholder={placeholder}
                 value={(form as Record<string, string>)[key]}
                 onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
-                className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 text-sm transition-colors"
+                className="w-full pl-10 pr-4 py-3 rounded-xl text-white text-sm outline-none"
+                style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}
                 required
               />
             </div>
           ))}
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium py-3 rounded-xl transition-all disabled:opacity-50 text-sm tracking-wide"
-          >
-            {loading ? 'Creating account\u2026' : 'Create Account'}
+          {error && (
+            <p className="text-sm text-center py-2 px-3 rounded-lg"
+              style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>
+              {error}
+            </p>
+          )}
+          <button type="submit" disabled={loading}
+            className="w-full py-3 rounded-xl text-white font-semibold text-sm tracking-wide transition-all disabled:opacity-40 hover:scale-[1.02]"
+            style={{ background: 'linear-gradient(135deg, #db2777, #7c3aed)', boxShadow: '0 0 24px rgba(219,39,119,0.4)' }}>
+            {loading ? 'Creating…' : 'Create Account ✦'}
           </button>
         </form>
 
-        <p className="text-center text-gray-600 text-sm mt-6">
+        <p className="text-center text-sm mt-6" style={{ color: 'rgba(255,255,255,0.3)' }}>
           Already have an account?{' '}
-          <Link href="/login" className="text-blue-400 hover:text-blue-300 transition-colors">
-            Sign in
-          </Link>
+          <Link href="/login" className="font-medium" style={{ color: '#e879f9' }}>Sign in</Link>
         </p>
       </div>
     </div>
