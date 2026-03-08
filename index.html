@@ -357,7 +357,7 @@ function addMarker({ name, lat, lng, imgUrl }) {
   const mat = new THREE.MeshPhongMaterial({ color: 0x6495ff, emissive: 0x2244cc, shininess: 80 });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.copy(pos);
-  scene.add(mesh);
+  earth.add(mesh);
   markerMeshes.push(mesh);
 
   // CSS2D label above pin
@@ -367,7 +367,7 @@ function addMarker({ name, lat, lng, imgUrl }) {
   const labelObj = new CSS2DObject(div);
   const labelPos = latLngToVec3(lat, lng, 1.08);
   labelObj.position.copy(labelPos);
-  scene.add(labelObj);
+  earth.add(labelObj);
 
   const place = { name, lat, lng, imgUrl, mesh, labelObj };
   places.push(place);
@@ -389,10 +389,11 @@ function addMarker({ name, lat, lng, imgUrl }) {
 }
 
 function flyTo(lat, lng) {
-  const target = latLngToVec3(lat, lng, 2.8);
-  // Animate camera toward that direction
+  // Account for earth's current rotation when computing camera target
+  const localPos = latLngToVec3(lat, lng, 2.8);
+  const worldPos = localPos.clone().applyEuler(earth.rotation);
   const start = camera.position.clone();
-  const end = target.clone();
+  const end = worldPos;
   let t = 0;
   const dur = 60;
   function step() {
