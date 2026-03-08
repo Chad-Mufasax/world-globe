@@ -1,3 +1,6 @@
+Playing around with Claude seing what he is capable of 
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
