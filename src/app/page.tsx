@@ -63,7 +63,7 @@ export default function HomePage() {
             </div>
             <span className="font-bold tracking-widest uppercase text-sm"
               style={{ background: 'linear-gradient(90deg, #e879f9, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              GlobeSnap
+              Merge
             </span>
           </div>
 

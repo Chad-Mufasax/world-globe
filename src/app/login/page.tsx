@@ -41,7 +41,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-3xl font-bold tracking-widest uppercase"
             style={{ background: 'linear-gradient(90deg, #e879f9, #a78bfa, #38bdf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            GlobeSnap
+            Merge
           </h1>
           <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>Pin your world. Share your moments.</p>
         </div>
